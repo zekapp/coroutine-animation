@@ -46,14 +46,14 @@ This visualizer helps you understand:
 
 **Option 1: GitHub Pages**
 ```
-https://zekapp.github.io/courotine-animation/
+https://zekapp.github.io/coroutine-animation/
 ```
 
 **Option 2: Local Setup**
 1. Clone the repository:
    ```bash
-   git clone https://github.com/zekapp/courotine-animation.git
-   cd courotine-animation
+   git clone https://github.com/zekapp/coroutine-animation.git
+   cd coroutine-animation
    ```
 
 2. Open in browser:
@@ -157,7 +157,7 @@ suspend fun loadUserData() {
 
 ### 📁 Project Structure
 ```
-courotine-animation/
+coroutine-animation/
 ├── index.html                          # Main animation page
 ├── flow-timeline-interactive.html      # Original reference
 ├── README.md                          # This file
@@ -182,11 +182,11 @@ courotine-animation/
 Contributions are welcome! Here are some ways you can help:
 
 ### 🐛 Bug Reports
-- Found a bug? [Open an issue](https://github.com/zekapp/courotine-animation/issues)
+- Found a bug? [Open an issue](https://github.com/zekapp/coroutine-animation/issues)
 - Include steps to reproduce and expected behavior
 
 ### ✨ Feature Requests
-- Want a new coroutine pattern? [Suggest it](https://github.com/zekapp/courotine-animation/issues)
+- Want a new coroutine pattern? [Suggest it](https://github.com/zekapp/coroutine-animation/issues)
 - Ideas for better visualizations? Let us know!
 
 ### 🔧 Development
@@ -234,6 +234,6 @@ This project is open source and available under the [MIT License](LICENSE).
 
 **Made with ❤️ for the Kotlin community**
 
-[⭐ Star this repo](https://github.com/zekapp/courotine-animation) if it helped you learn coroutines!
+[⭐ Star this repo](https://github.com/zekapp/coroutine-animation) if it helped you learn coroutines!
 
 </div>
