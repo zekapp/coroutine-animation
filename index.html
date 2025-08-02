@@ -644,7 +644,10 @@
                         Think of it like a YouTube video - each viewer starts from the beginning.
                     </p>
                     <div class="explanation-box" style="background: #e8f4fd; border-color: #3498db;">
-                        <strong>📱 Real-World Use Case:</strong> Perfect for operations that should run fresh for each observer:
+                        <strong>❄️ COLD FLOW = Fresh Execution Per Collector</strong>
+                        <div style="margin: 8px 0; padding: 8px; background: #f0f8ff; border-radius: 4px; font-size: 0.9em;">
+                            <strong>🎯 When to use:</strong> When each collector should trigger its own fresh execution
+                        </div>
                         <ul style="margin: 5px 0 0 20px; font-size: 0.9em;">
                             <li>Database queries - each UI component gets fresh data</li>
                             <li>Network requests - each subscriber triggers its own API call</li>
@@ -692,7 +695,10 @@
                         Like a live TV broadcast - you join wherever it currently is.
                     </p>
                     <div class="explanation-box" style="background: #e8f8f0; border-color: #2ecc71;">
-                        <strong>📡 Real-World Use Case:</strong> Ideal for broadcasting events to multiple subscribers:
+                        <strong>🔥 HOT FLOW = One Source, Many Receivers</strong>
+                        <div style="margin: 8px 0; padding: 8px; background: #f0fff0; border-radius: 4px; font-size: 0.9em;">
+                            <strong>🎯 When to use:</strong> When you want to broadcast events/updates to multiple listeners
+                        </div>
                         <ul style="margin: 5px 0 0 20px; font-size: 0.9em;">
                             <li>Event bus - app-wide events (user login, logout, etc.)</li>
                             <li>Live data streams - stock prices, sensor readings</li>
@@ -1149,6 +1155,7 @@
             
             updateStatus('cold-flow-status', 'running');
             addLog('<strong>[Cold Flow]</strong> Starting cold flow animation', 'cold-flow');
+            addLog('❄️ COLD FLOW: Each collector gets its OWN fresh execution', 'cold-flow');
             addLog('Cold Flow created with flow { emit(1); delay(1000); emit(2); delay(1000); emit(3) }', 'cold-flow');
             
             // Collector 1
@@ -1185,8 +1192,8 @@
             // Collector 2
             setTimeout(() => {
                 addLog('<span class="highlight">Collector 2</span> subscribes to cold flow', 'cold-flow');
-                addLog('⚠️ Flow block executes AGAIN from the beginning for Collector 2!', 'cold-flow');
-                addLog('This is why it\'s called "cold" - each collector gets its own execution', 'cold-flow');
+                addLog('🔄 INDEPENDENT EXECUTION: Flow block runs AGAIN from start!', 'cold-flow');
+                addLog('⭐ KEY INSIGHT: Cold = Fresh execution per collector (like restarting a video)', 'cold-flow');
                 
                 const collector2 = document.createElement('div');
                 collector2.className = 'collector-row active';
@@ -1232,6 +1239,7 @@
             
             updateStatus('shared-flow-status', 'running');
             addLog('<strong>[SharedFlow]</strong> Starting SharedFlow animation', 'shared-flow');
+            addLog('🔥 HOT FLOW: ONE source broadcasts to ALL collectors', 'shared-flow');
             addLog('SharedFlow created with replay = 2 (keeps last 2 values)', 'shared-flow');
             
             // Start emitting
@@ -1301,7 +1309,8 @@
                             collectors.appendChild(collector2);
                             
                             addLog('<span class="highlight">Collector 2</span> subscribes late!', 'shared-flow');
-                            addLog(`Collector 2 immediately receives replay buffer: [${replayBuffer.join(', ')}]`, 'shared-flow');
+                            addLog(`🎯 SHARED BENEFIT: Gets replay buffer: [${replayBuffer.join(', ')}] + future values`, 'shared-flow');
+                            addLog('⭐ KEY INSIGHT: Hot = Join ongoing broadcast (like live TV)', 'shared-flow');
                             
                             // Show replay values
                             replayBuffer.forEach((replayValue, i) => {
@@ -1341,7 +1350,9 @@
             
             updateStatus('state-flow-status', 'running');
             addLog('<strong>[StateFlow]</strong> Starting StateFlow animation', 'state-flow');
+            addLog('🎯 STATE HOLDER: Always has ONE current value', 'state-flow');
             addLog('StateFlow created with initial value: 0', 'state-flow');
+            addLog('🔄 Auto-skips duplicates + new collectors get current state immediately', 'state-flow');
             
             const updates = [
                 { value: 1, skip: false },
@@ -1388,10 +1399,11 @@
             
             setTimeout(() => {
                 addLog('New collector subscribes...', 'state-flow');
-                addLog('Collector immediately receives current state: 4', 'state-flow');
+                addLog('✅ INSTANT VALUE: Gets current state (4) immediately!', 'state-flow');
+                addLog('⭐ WHEN TO USE StateFlow: UI state, settings, authentication status', 'state-flow');
+                addLog('⭐ WHEN TO USE SharedFlow: Events, notifications, live updates', 'state-flow');
                 updateStatus('state-flow-status', 'completed');
                 addLog('<strong>[StateFlow]</strong> Animation completed', 'state-flow');
-                addLog('Key takeaway: StateFlow always has a value and skips consecutive duplicates', 'state-flow');
                 addLog('💡 Example: themeState.value = DarkMode - all UI components update', 'state-flow');
             }, 6000);
         }
@@ -1407,7 +1419,9 @@
             
             updateStatus('channel-status', 'running');
             addLog('<strong>[Channel]</strong> Starting Channel animation', 'channel');
+            addLog('📬 QUEUE-LIKE: Each value consumed by ONLY ONE receiver', 'channel');
             addLog('Channel created (unbuffered by default)', 'channel');
+            addLog('🔄 vs Flow: Channel = queue (consume once), Flow = broadcast (all get)', 'channel');
             
             let queueItems = [];
             
@@ -1435,7 +1449,7 @@
                     setTimeout(() => {
                         if (queueItems.length > 0) {
                             const received = queueItems.shift();
-                            addLog(`Consumer: channel.receive() -> ${received}`, 'channel');
+                            addLog(`Consumer: channel.receive() -> ${received} ✅ CONSUMED (removed from queue)`, 'channel');
                             
                             const receiveEl = document.createElement('div');
                             receiveEl.className = 'coroutine-visual';
@@ -1474,16 +1488,17 @@
             
             updateStatus('context-status', 'running');
             addLog('<strong>[withContext]</strong> Starting context switching animation', 'context');
+            addLog('🧵 THREAD OPTIMIZATION: Right work on right thread = better performance', 'context');
             
             // Reset threads
             threads.forEach(id => document.getElementById(id).classList.remove('active'));
             
             const sequence = [
-                { thread: 0, message: 'Coroutine starts on Main thread', task: 'UI Setup' },
-                { thread: 1, message: 'Switching to IO thread for network call', task: 'Network Request' },
-                { thread: 1, message: 'Performing network operation...', task: 'Loading...' },
-                { thread: 2, message: 'Switching to Default thread for computation', task: 'Process Data' },
-                { thread: 0, message: 'Back to Main thread for UI update', task: 'Update UI' }
+                { thread: 0, message: '🖱️ Main thread: UI setup (keep UI responsive)', task: 'UI Setup' },
+                { thread: 1, message: '🌐 withContext(IO): Network call (don\'t block UI)', task: 'Network Request' },
+                { thread: 1, message: '📡 IO thread: Network operation in progress...', task: 'Loading...' },
+                { thread: 2, message: '⚡ withContext(Default): Heavy computation', task: 'Process Data' },
+                { thread: 0, message: '🖱️ withContext(Main): UI update (back to Main)', task: 'Update UI' }
             ];
             
             sequence.forEach((step, index) => {
@@ -1510,7 +1525,8 @@
                         setTimeout(() => {
                             updateStatus('context-status', 'completed');
                             addLog('<strong>[withContext]</strong> Animation completed', 'context');
-                            addLog('Key takeaway: withContext switches threads while preserving coroutine state', 'context');
+                            addLog('⭐ PERFORMANCE WIN: UI stays responsive, work happens on optimal threads', 'context');
+                            addLog('💡 Rule: IO for network/files, Default for CPU work, Main for UI', 'context');
                         }, 1000);
                     }
                 }, index * 1500);
@@ -1634,7 +1650,12 @@
         }
 
         function startAllAnimations() {
-            addLog('<strong>Starting all animations...</strong>', 'info');
+            addLog('<strong>🚀 Starting comprehensive coroutine demonstration...</strong>', 'info');
+            addLog('📚 LEARNING GOALS:', 'info');
+            addLog('   • Cold vs Hot: Independent execution vs Broadcasting', 'info');
+            addLog('   • StateFlow vs SharedFlow: State holder vs Event emitter', 'info');
+            addLog('   • Channel vs Flow: Queue consumption vs Broadcasting', 'info');
+            addLog('   • withContext: Performance through proper thread usage', 'info');
             
             setTimeout(() => animateLaunch(), 0);
             setTimeout(() => animateAsync(), 500);
