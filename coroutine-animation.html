@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kotlin Coroutines Animation Visualizer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2em;
+        }
+
+        .controls-panel {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        .btn-secondary:hover {
+            background: #bdc3c7;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .coroutine-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .coroutine-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .coroutine-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .status-idle {
+            background: #ecf0f1;
+            color: #7f8c8d;
+        }
+
+        .status-running {
+            background: #2ecc71;
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-suspended {
+            background: #f39c12;
+            color: white;
+        }
+
+        .status-completed {
+            background: #3498db;
+            color: white;
+        }
+
+        .status-cancelled {
+            background: #e74c3c;
+            color: white;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        .visualization-area {
+            height: 200px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .timeline {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .coroutine-element {
+            position: absolute;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .coroutine-element:hover {
+            transform: scale(1.1);
+        }
+
+        .launch-coroutine {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .async-coroutine {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .flow-emission {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .cold-flow-emission {
+            background: #3498db;
+        }
+
+        .hot-flow-emission {
+            background: #e74c3c;
+        }
+
+        .shared-flow-emission {
+            background: #2ecc71;
+        }
+
+        .state-flow-emission {
+            background: #f39c12;
+        }
+
+        .channel-element {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .description {
+            color: #7f8c8d;
+            font-size: 0.95em;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .code-snippet {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        .metrics {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .animate-in {
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes flow {
+            0% {
+                transform: translateX(0) scale(0.8);
+                opacity: 0;
+            }
+            20% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+            80% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(300px) scale(0.8);
+                opacity: 0;
+            }
+        }
+
+        .flowing {
+            animation: flow 3s ease-in-out;
+        }
+
+        .legend {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+
+        .legend-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+        }
+
+        .thread-pool {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .thread {
+            flex: 1;
+            height: 60px;
+            background: #ecf0f1;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85em;
+            color: #7f8c8d;
+            transition: all 0.3s ease;
+        }
+
+        .thread.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+
+        .close-modal:hover {
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>Kotlin Coroutines Animation Visualizer</h1>
+            <p class="subtitle">Interactive visualization of different coroutine types and their behaviors</p>
+        </div>
+
+        <div class="controls-panel">
+            <button class="btn btn-primary" onclick="startAllAnimations()">Start All Animations</button>
+            <button class="btn btn-secondary" onclick="pauseAllAnimations()">Pause All</button>
+            <button class="btn btn-danger" onclick="resetAllAnimations()">Reset All</button>
+            <button class="btn btn-secondary" onclick="showLegend()">Show Legend</button>
+        </div>
+
+        <div class="coroutine-grid">
+            <!-- Launch Coroutine -->
+            <div class="coroutine-card">
+                <div class="card-header">
+                    <h3 class="card-title">launch { }</h3>
+                    <span class="status-badge status-idle" id="launch-status">Idle</span>
+                </div>
+                <p class="description">Fire-and-forget coroutine that runs asynchronously without returning a result.</p>
+                <div class="visualization-area" id="launch-viz">
+                    <div class="timeline">
+                        <div class="progress-bar" id="launch-progress"></div>
+                    </div>
+                </div>
+                <div class="code-snippet">
+                    launch {<br>
+                    &nbsp;&nbsp;delay(1000)<br>
+                    &nbsp;&nbsp;println("Task completed")<br>
+                    }
+                </div>
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="launch-time">0s</div>
+                        <div class="metric-label">Duration</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="launch-count">0</div>
+                        <div class="metric-label">Executions</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Async Coroutine -->
+            <div class="coroutine-card">
+                <div class="card-header">
+                    <h3 class="card-title">async { }</h3>
+                    <span class="status-badge status-idle" id="async-status">Idle</span>
+                </div>
+                <p class="description">Returns a Deferred<T> that can be awaited to get the result.</p>
+                <div class="visualization-area" id="async-viz">
+                    <div class="timeline">
+                        <div class="progress-bar" id="async-progress"></div>
+                    </div>
+                </div>
+                <div class="code-snippet">
+                    val deferred = async {<br>
+                    &nbsp;&nbsp;delay(1000)<br>
+                    &nbsp;&nbsp;return@async "Result"<br>
+                    }<br>
+                    val result = deferred.await()
+                </div>
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="async-result">-</div>
+                        <div class="metric-label">Result</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="async-time">0s</div>
+                        <div class="metric-label">Duration</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cold Flow -->
+            <div class="coroutine-card">
+                <div class="card-header">
+                    <h3 class="card-title">Cold Flow</h3>
+                    <span class="status-badge status-idle" id="cold-flow-status">Idle</span>
+                </div>
+                <p class="description">Starts fresh for each collector. Each collection triggers a new flow execution.</p>
+                <div class="visualization-area" id="cold-flow-viz">
+                    <div class="timeline">
+                        <div class="progress-bar" id="cold-flow-progress"></div>
+                    </div>
+                </div>
+                <div class="code-snippet">
+                    flow {<br>
+                    &nbsp;&nbsp;emit(1)<br>
+                    &nbsp;&nbsp;delay(100)<br>
+                    &nbsp;&nbsp;emit(2)<br>
+                    }.collect { value -><br>
+                    &nbsp;&nbsp;println(value)<br>
+                    }
+                </div>
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="cold-flow-emissions">0</div>
+                        <div class="metric-label">Emissions</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="cold-flow-collectors">0</div>
+                        <div class="metric-label">Collectors</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hot Flow (SharedFlow) -->
+            <div class="coroutine-card">
+                <div class="card-header">
+                    <h3 class="card-title">SharedFlow</h3>
+                    <span class="status-badge status-idle" id="shared-flow-status">Idle</span>
+                </div>
+                <p class="description">Hot flow that broadcasts values to multiple collectors. Can replay values.</p>
+                <div class="visualization-area" id="shared-flow-viz">
+                    <div class="timeline">
+                        <div class="progress-bar" id="shared-flow-progress"></div>
+                    </div>
+                </div>
+                <div class="code-snippet">
+                    val sharedFlow = MutableSharedFlow&lt;Int&gt;(<br>
+                    &nbsp;&nbsp;replay = 2<br>
+                    )<br>
+                    sharedFlow.emit(value)
+                </div>
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="shared-flow-buffer">0/2</div>
+                        <div class="metric-label">Replay Buffer</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="shared-flow-subscribers">0</div>
+                        <div class="metric-label">Subscribers</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- StateFlow -->
+            <div class="coroutine-card">
+                <div class="card-header">
+                    <h3 class="card-title">StateFlow</h3>
+                    <span class="status-badge status-idle" id="state-flow-status">Idle</span>
+                </div>
+                <p class="description">Always holds one value. Emits current state immediately to new collectors.</p>
+                <div class="visualization-area" id="state-flow-viz">
+                    <div class="timeline">
+                        <div class="progress-bar" id="state-flow-progress"></div>
+                    </div>
+                </div>
+                <div class="code-snippet">
+                    val stateFlow = MutableStateFlow(0)<br>
+                    stateFlow.value = newValue<br>
+                    // Skips consecutive duplicates
+                </div>
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="state-flow-value">0</div>
+                        <div class="metric-label">Current State</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="state-flow-updates">0</div>
+                        <div class="metric-label">Updates</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Channel -->
+            <div class="coroutine-card">
+                <div class="card-header">
+                    <h3 class="card-title">Channel</h3>
+                    <span class="status-badge status-idle" id="channel-status">Idle</span>
+                </div>
+                <p class="description">Hot stream of values between coroutines. Similar to a BlockingQueue.</p>
+                <div class="visualization-area" id="channel-viz">
+                    <div class="timeline">
+                        <div class="progress-bar" id="channel-progress"></div>
+                    </div>
+                </div>
+                <div class="code-snippet">
+                    val channel = Channel&lt;Int&gt;()<br>
+                    launch { channel.send(42) }<br>
+                    launch { <br>
+                    &nbsp;&nbsp;val value = channel.receive()<br>
+                    }
+                </div>
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="channel-queue">0</div>
+                        <div class="metric-label">Queue Size</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="channel-sent">0</div>
+                        <div class="metric-label">Sent</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- withContext -->
+            <div class="coroutine-card">
+                <div class="card-header">
+                    <h3 class="card-title">withContext</h3>
+                    <span class="status-badge status-idle" id="context-status">Idle</span>
+                </div>
+                <p class="description">Switches coroutine context/dispatcher and returns result.</p>
+                <div class="visualization-area" id="context-viz">
+                    <div class="thread-pool" id="thread-pool">
+                        <div class="thread" id="main-thread">Main</div>
+                        <div class="thread" id="io-thread">IO</div>
+                        <div class="thread" id="default-thread">Default</div>
+                    </div>
+                    <div class="timeline">
+                        <div class="progress-bar" id="context-progress"></div>
+                    </div>
+                </div>
+                <div class="code-snippet">
+                    withContext(Dispatchers.IO) {<br>
+                    &nbsp;&nbsp;// IO operations<br>
+                    }<br>
+                    withContext(Dispatchers.Main) {<br>
+                    &nbsp;&nbsp;// UI updates<br>
+                    }
+                </div>
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="context-switches">0</div>
+                        <div class="metric-label">Context Switches</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- runBlocking -->
+            <div class="coroutine-card">
+                <div class="card-header">
+                    <h3 class="card-title">runBlocking</h3>
+                    <span class="status-badge status-idle" id="blocking-status">Idle</span>
+                </div>
+                <p class="description">Blocks current thread until coroutine completes. Used for main functions and tests.</p>
+                <div class="visualization-area" id="blocking-viz">
+                    <div class="timeline">
+                        <div class="progress-bar" id="blocking-progress"></div>
+                    </div>
+                </div>
+                <div class="code-snippet">
+                    runBlocking {<br>
+                    &nbsp;&nbsp;// Blocks thread<br>
+                    &nbsp;&nbsp;delay(1000)<br>
+                    &nbsp;&nbsp;println("Done")<br>
+                    }
+                </div>
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="blocking-time">0s</div>
+                        <div class="metric-label">Block Time</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <h3 class="legend-title">Coroutine Types & Behaviors</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                    <span><strong>launch:</strong> Fire-and-forget</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                    <span><strong>async:</strong> Returns Deferred</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color cold-flow-emission"></div>
+                    <span><strong>Cold Flow:</strong> New execution per collector</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color shared-flow-emission"></div>
+                    <span><strong>SharedFlow:</strong> Broadcasts to all</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color state-flow-emission"></div>
+                    <span><strong>StateFlow:</strong> Always has value</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"></div>
+                    <span><strong>Channel:</strong> Hot stream</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for additional information -->
+    <div class="modal" id="infoModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title"></h2>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        // Animation state
+        let animations = {
+            launch: { running: false, count: 0, startTime: null },
+            async: { running: false, startTime: null },
+            coldFlow: { running: false, emissions: 0, collectors: 0 },
+            sharedFlow: { running: false, buffer: [], subscribers: 0 },
+            stateFlow: { running: false, value: 0, updates: 0 },
+            channel: { running: false, queue: [], sent: 0 },
+            context: { running: false, switches: 0 },
+            blocking: { running: false, startTime: null }
+        };
+
+        // Launch coroutine animation
+        function animateLaunch() {
+            const status = document.getElementById('launch-status');
+            const progress = document.getElementById('launch-progress');
+            const timeDisplay = document.getElementById('launch-time');
+            const countDisplay = document.getElementById('launch-count');
+            const viz = document.getElementById('launch-viz');
+
+            if (animations.launch.running) return;
+            
+            animations.launch.running = true;
+            animations.launch.startTime = Date.now();
+            animations.launch.count++;
+            
+            status.className = 'status-badge status-running';
+            status.textContent = 'Running';
+            countDisplay.textContent = animations.launch.count;
+
+            // Create visual coroutine element
+            const coroutineEl = document.createElement('div');
+            coroutineEl.className = 'coroutine-element launch-coroutine animate-in';
+            coroutineEl.style.left = '20px';
+            coroutineEl.style.top = '40px';
+            coroutineEl.textContent = `launch #${animations.launch.count}`;
+            viz.appendChild(coroutineEl);
+
+            let progressValue = 0;
+            const progressInterval = setInterval(() => {
+                progressValue += 2;
+                progress.style.width = progressValue + '%';
+                
+                const elapsed = ((Date.now() - animations.launch.startTime) / 1000).toFixed(1);
+                timeDisplay.textContent = elapsed + 's';
+                
+                if (progressValue >= 100) {
+                    clearInterval(progressInterval);
+                    status.className = 'status-badge status-completed';
+                    status.textContent = 'Completed';
+                    animations.launch.running = false;
+                    
+                    setTimeout(() => {
+                        coroutineEl.style.opacity = '0.3';
+                    }, 500);
+                }
+            }, 50);
+        }
+
+        // Async coroutine animation
+        function animateAsync() {
+            const status = document.getElementById('async-status');
+            const progress = document.getElementById('async-progress');
+            const timeDisplay = document.getElementById('async-time');
+            const resultDisplay = document.getElementById('async-result');
+            const viz = document.getElementById('async-viz');
+
+            if (animations.async.running) return;
+            
+            animations.async.running = true;
+            animations.async.startTime = Date.now();
+            
+            status.className = 'status-badge status-running';
+            status.textContent = 'Running';
+            resultDisplay.textContent = 'Pending...';
+
+            // Create visual async element
+            const asyncEl = document.createElement('div');
+            asyncEl.className = 'coroutine-element async-coroutine animate-in';
+            asyncEl.style.left = '20px';
+            asyncEl.style.top = '40px';
+            asyncEl.textContent = 'async { }';
+            viz.appendChild(asyncEl);
+
+            let progressValue = 0;
+            const progressInterval = setInterval(() => {
+                progressValue += 1.5;
+                progress.style.width = progressValue + '%';
+                
+                const elapsed = ((Date.now() - animations.async.startTime) / 1000).toFixed(1);
+                timeDisplay.textContent = elapsed + 's';
+                
+                if (progressValue >= 100) {
+                    clearInterval(progressInterval);
+                    status.className = 'status-badge status-completed';
+                    status.textContent = 'Completed';
+                    resultDisplay.textContent = '"Result"';
+                    animations.async.running = false;
+                    
+                    // Show result
+                    const resultEl = document.createElement('div');
+                    resultEl.className = 'coroutine-element async-coroutine';
+                    resultEl.style.right = '20px';
+                    resultEl.style.top = '40px';
+                    resultEl.textContent = 'Result';
+                    resultEl.style.background = 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)';
+                    viz.appendChild(resultEl);
+                    
+                    setTimeout(() => {
+                        asyncEl.style.opacity = '0.3';
+                        resultEl.style.opacity = '0.3';
+                    }, 1000);
+                }
+            }, 50);
+        }
+
+        // Cold Flow animation
+        function animateColdFlow() {
+            const status = document.getElementById('cold-flow-status');
+            const progress = document.getElementById('cold-flow-progress');
+            const emissionsDisplay = document.getElementById('cold-flow-emissions');
+            const collectorsDisplay = document.getElementById('cold-flow-collectors');
+            const viz = document.getElementById('cold-flow-viz');
+
+            if (animations.coldFlow.running) return;
+            
+            animations.coldFlow.running = true;
+            animations.coldFlow.collectors++;
+            
+            status.className = 'status-badge status-running';
+            status.textContent = 'Collecting';
+            collectorsDisplay.textContent = animations.coldFlow.collectors;
+
+            // Emit values
+            const values = [1, 2, 3, 4, 5];
+            let index = 0;
+            
+            const emitInterval = setInterval(() => {
+                if (index < values.length) {
+                    animations.coldFlow.emissions++;
+                    emissionsDisplay.textContent = animations.coldFlow.emissions;
+                    
+                    const emission = document.createElement('div');
+                    emission.className = 'coroutine-element flow-emission cold-flow-emission flowing';
+                    emission.style.left = '20px';
+                    emission.style.top = '60px';
+                    emission.textContent = values[index];
+                    viz.appendChild(emission);
+                    
+                    setTimeout(() => {
+                        emission.remove();
+                    }, 3000);
+                    
+                    index++;
+                    progress.style.width = (index / values.length * 100) + '%';
+                } else {
+                    clearInterval(emitInterval);
+                    status.className = 'status-badge status-completed';
+                    status.textContent = 'Completed';
+                    animations.coldFlow.running = false;
+                    
+                    setTimeout(() => {
+                        progress.style.width = '0%';
+                    }, 1000);
+                }
+            }, 600);
+        }
+
+        // SharedFlow animation
+        function animateSharedFlow() {
+            const status = document.getElementById('shared-flow-status');
+            const progress = document.getElementById('shared-flow-progress');
+            const bufferDisplay = document.getElementById('shared-flow-buffer');
+            const subscribersDisplay = document.getElementById('shared-flow-subscribers');
+            const viz = document.getElementById('shared-flow-viz');
+
+            if (animations.sharedFlow.running) return;
+            
+            animations.sharedFlow.running = true;
+            animations.sharedFlow.subscribers = Math.floor(Math.random() * 3) + 1;
+            
+            status.className = 'status-badge status-running';
+            status.textContent = 'Broadcasting';
+            subscribersDisplay.textContent = animations.sharedFlow.subscribers;
+
+            // Show subscribers
+            for (let i = 0; i < animations.sharedFlow.subscribers; i++) {
+                const sub = document.createElement('div');
+                sub.className = 'coroutine-element animate-in';
+                sub.style.right = '20px';
+                sub.style.top = (30 + i * 50) + 'px';
+                sub.style.background = '#95a5a6';
+                sub.textContent = `Sub ${i + 1}`;
+                viz.appendChild(sub);
+            }
+
+            // Emit values
+            let emitCount = 0;
+            const emitInterval = setInterval(() => {
+                if (emitCount < 5) {
+                    const value = emitCount + 1;
+                    animations.sharedFlow.buffer.push(value);
+                    if (animations.sharedFlow.buffer.length > 2) {
+                        animations.sharedFlow.buffer.shift();
+                    }
+                    
+                    bufferDisplay.textContent = animations.sharedFlow.buffer.length + '/2';
+                    
+                    const emission = document.createElement('div');
+                    emission.className = 'coroutine-element flow-emission shared-flow-emission flowing';
+                    emission.style.left = '20px';
+                    emission.style.top = '60px';
+                    emission.textContent = value;
+                    viz.appendChild(emission);
+                    
+                    setTimeout(() => {
+                        emission.remove();
+                    }, 3000);
+                    
+                    emitCount++;
+                    progress.style.width = (emitCount / 5 * 100) + '%';
+                } else {
+                    clearInterval(emitInterval);
+                    status.className = 'status-badge status-completed';
+                    status.textContent = 'Active';
+                    animations.sharedFlow.running = false;
+                }
+            }, 800);
+        }
+
+        // StateFlow animation
+        function animateStateFlow() {
+            const status = document.getElementById('state-flow-status');
+            const progress = document.getElementById('state-flow-progress');
+            const valueDisplay = document.getElementById('state-flow-value');
+            const updatesDisplay = document.getElementById('state-flow-updates');
+            const viz = document.getElementById('state-flow-viz');
+
+            if (animations.stateFlow.running) return;
+            
+            animations.stateFlow.running = true;
+            
+            status.className = 'status-badge status-running';
+            status.textContent = 'Updating';
+
+            // State updates (some duplicates will be skipped)
+            const updates = [1, 2, 2, 3, 3, 3, 4, 5];
+            let index = 0;
+            let lastValue = animations.stateFlow.value;
+            
+            const updateInterval = setInterval(() => {
+                if (index < updates.length) {
+                    const newValue = updates[index];
+                    
+                    const stateEl = document.createElement('div');
+                    stateEl.className = 'coroutine-element flow-emission state-flow-emission';
+                    stateEl.style.left = (20 + index * 40) + 'px';
+                    stateEl.style.top = '60px';
+                    stateEl.textContent = newValue;
+                    
+                    if (newValue === lastValue) {
+                        stateEl.style.opacity = '0.5';
+                        stateEl.style.textDecoration = 'line-through';
+                        stateEl.title = 'Skipped (duplicate)';
+                    } else {
+                        animations.stateFlow.value = newValue;
+                        animations.stateFlow.updates++;
+                        valueDisplay.textContent = newValue;
+                        updatesDisplay.textContent = animations.stateFlow.updates;
+                        lastValue = newValue;
+                    }
+                    
+                    viz.appendChild(stateEl);
+                    
+                    index++;
+                    progress.style.width = (index / updates.length * 100) + '%';
+                } else {
+                    clearInterval(updateInterval);
+                    status.className = 'status-badge status-completed';
+                    status.textContent = 'Active';
+                    animations.stateFlow.running = false;
+                }
+            }, 500);
+        }
+
+        // Channel animation
+        function animateChannel() {
+            const status = document.getElementById('channel-status');
+            const progress = document.getElementById('channel-progress');
+            const queueDisplay = document.getElementById('channel-queue');
+            const sentDisplay = document.getElementById('channel-sent');
+            const viz = document.getElementById('channel-viz');
+
+            if (animations.channel.running) return;
+            
+            animations.channel.running = true;
+            
+            status.className = 'status-badge status-running';
+            status.textContent = 'Active';
+
+            // Simulate send and receive
+            let sent = 0;
+            let received = 0;
+            
+            const channelInterval = setInterval(() => {
+                // Random send
+                if (Math.random() > 0.3 && sent < 10) {
+                    sent++;
+                    animations.channel.sent++;
+                    animations.channel.queue.push(sent);
+                    sentDisplay.textContent = animations.channel.sent;
+                    queueDisplay.textContent = animations.channel.queue.length;
+                    
+                    const sendEl = document.createElement('div');
+                    sendEl.className = 'coroutine-element channel-element animate-in';
+                    sendEl.style.left = '20px';
+                    sendEl.style.top = '40px';
+                    sendEl.textContent = `Send(${sent})`;
+                    viz.appendChild(sendEl);
+                    
+                    setTimeout(() => {
+                        sendEl.style.transform = 'translateX(150px)';
+                        setTimeout(() => sendEl.remove(), 500);
+                    }, 100);
+                }
+                
+                // Random receive
+                if (Math.random() > 0.5 && animations.channel.queue.length > 0) {
+                    const value = animations.channel.queue.shift();
+                    received++;
+                    queueDisplay.textContent = animations.channel.queue.length;
+                    
+                    const receiveEl = document.createElement('div');
+                    receiveEl.className = 'coroutine-element channel-element animate-in';
+                    receiveEl.style.right = '20px';
+                    receiveEl.style.top = '80px';
+                    receiveEl.textContent = `Receive(${value})`;
+                    viz.appendChild(receiveEl);
+                    
+                    setTimeout(() => receiveEl.remove(), 1000);
+                }
+                
+                progress.style.width = (sent / 10 * 100) + '%';
+                
+                if (sent >= 10 && animations.channel.queue.length === 0) {
+                    clearInterval(channelInterval);
+                    status.className = 'status-badge status-completed';
+                    status.textContent = 'Completed';
+                    animations.channel.running = false;
+                }
+            }, 600);
+        }
+
+        // Context switching animation
+        function animateContext() {
+            const status = document.getElementById('context-status');
+            const progress = document.getElementById('context-progress');
+            const switchesDisplay = document.getElementById('context-switches');
+            const threads = ['main-thread', 'io-thread', 'default-thread'];
+            
+            if (animations.context.running) return;
+            
+            animations.context.running = true;
+            
+            status.className = 'status-badge status-running';
+            status.textContent = 'Switching';
+
+            let currentThread = 0;
+            let switches = 0;
+            
+            const switchInterval = setInterval(() => {
+                // Deactivate all threads
+                threads.forEach(id => {
+                    document.getElementById(id).classList.remove('active');
+                });
+                
+                // Activate current thread
+                document.getElementById(threads[currentThread]).classList.add('active');
+                
+                switches++;
+                animations.context.switches++;
+                switchesDisplay.textContent = animations.context.switches;
+                
+                progress.style.width = (switches / 6 * 100) + '%';
+                
+                currentThread = (currentThread + 1) % threads.length;
+                
+                if (switches >= 6) {
+                    clearInterval(switchInterval);
+                    status.className = 'status-badge status-completed';
+                    status.textContent = 'Completed';
+                    animations.context.running = false;
+                    
+                    setTimeout(() => {
+                        threads.forEach(id => {
+                            document.getElementById(id).classList.remove('active');
+                        });
+                    }, 1000);
+                }
+            }, 800);
+        }
+
+        // RunBlocking animation
+        function animateBlocking() {
+            const status = document.getElementById('blocking-status');
+            const progress = document.getElementById('blocking-progress');
+            const timeDisplay = document.getElementById('blocking-time');
+            const viz = document.getElementById('blocking-viz');
+            
+            if (animations.blocking.running) return;
+            
+            animations.blocking.running = true;
+            animations.blocking.startTime = Date.now();
+            
+            status.className = 'status-badge status-suspended';
+            status.textContent = 'Blocking';
+
+            // Show blocking indicator
+            const blockEl = document.createElement('div');
+            blockEl.className = 'coroutine-element animate-in';
+            blockEl.style.left = '50%';
+            blockEl.style.top = '40px';
+            blockEl.style.transform = 'translateX(-50%)';
+            blockEl.style.background = '#e74c3c';
+            blockEl.textContent = '⏸ Thread Blocked';
+            viz.appendChild(blockEl);
+
+            let progressValue = 0;
+            const progressInterval = setInterval(() => {
+                progressValue += 1;
+                progress.style.width = progressValue + '%';
+                
+                const elapsed = ((Date.now() - animations.blocking.startTime) / 1000).toFixed(1);
+                timeDisplay.textContent = elapsed + 's';
+                
+                if (progressValue >= 100) {
+                    clearInterval(progressInterval);
+                    status.className = 'status-badge status-completed';
+                    status.textContent = 'Unblocked';
+                    animations.blocking.running = false;
+                    
+                    blockEl.textContent = '✓ Thread Released';
+                    blockEl.style.background = '#2ecc71';
+                    
+                    setTimeout(() => {
+                        blockEl.style.opacity = '0.3';
+                    }, 1000);
+                }
+            }, 30);
+        }
+
+        // Control functions
+        function startAllAnimations() {
+            animateLaunch();
+            setTimeout(() => animateAsync(), 500);
+            setTimeout(() => animateColdFlow(), 1000);
+            setTimeout(() => animateSharedFlow(), 1500);
+            setTimeout(() => animateStateFlow(), 2000);
+            setTimeout(() => animateChannel(), 2500);
+            setTimeout(() => animateContext(), 3000);
+            setTimeout(() => animateBlocking(), 3500);
+        }
+
+        function pauseAllAnimations() {
+            // In a real implementation, you would pause the intervals
+            alert('Pause functionality would stop all running animations');
+        }
+
+        function resetAllAnimations() {
+            // Clear all visualizations
+            const vizAreas = document.querySelectorAll('.visualization-area');
+            vizAreas.forEach(area => {
+                const elements = area.querySelectorAll('.coroutine-element, .flow-emission');
+                elements.forEach(el => el.remove());
+            });
+
+            // Reset progress bars
+            const progressBars = document.querySelectorAll('.progress-bar');
+            progressBars.forEach(bar => bar.style.width = '0%');
+
+            // Reset statuses
+            const statuses = document.querySelectorAll('.status-badge');
+            statuses.forEach(status => {
+                status.className = 'status-badge status-idle';
+                status.textContent = 'Idle';
+            });
+
+            // Reset metrics
+            document.getElementById('launch-time').textContent = '0s';
+            document.getElementById('launch-count').textContent = '0';
+            document.getElementById('async-result').textContent = '-';
+            document.getElementById('async-time').textContent = '0s';
+            document.getElementById('cold-flow-emissions').textContent = '0';
+            document.getElementById('cold-flow-collectors').textContent = '0';
+            document.getElementById('shared-flow-buffer').textContent = '0/2';
+            document.getElementById('shared-flow-subscribers').textContent = '0';
+            document.getElementById('state-flow-value').textContent = '0';
+            document.getElementById('state-flow-updates').textContent = '0';
+            document.getElementById('channel-queue').textContent = '0';
+            document.getElementById('channel-sent').textContent = '0';
+            document.getElementById('context-switches').textContent = '0';
+            document.getElementById('blocking-time').textContent = '0s';
+
+            // Reset animation states
+            for (let key in animations) {
+                animations[key].running = false;
+                if (animations[key].count !== undefined) animations[key].count = 0;
+                if (animations[key].emissions !== undefined) animations[key].emissions = 0;
+                if (animations[key].collectors !== undefined) animations[key].collectors = 0;
+                if (animations[key].buffer !== undefined) animations[key].buffer = [];
+                if (animations[key].subscribers !== undefined) animations[key].subscribers = 0;
+                if (animations[key].value !== undefined) animations[key].value = 0;
+                if (animations[key].updates !== undefined) animations[key].updates = 0;
+                if (animations[key].queue !== undefined) animations[key].queue = [];
+                if (animations[key].sent !== undefined) animations[key].sent = 0;
+                if (animations[key].switches !== undefined) animations[key].switches = 0;
+            }
+
+            // Reset thread highlights
+            document.querySelectorAll('.thread').forEach(thread => {
+                thread.classList.remove('active');
+            });
+        }
+
+        function showLegend() {
+            const modal = document.getElementById('infoModal');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+            
+            title.textContent = 'Kotlin Coroutines Guide';
+            body.innerHTML = `
+                <h3>Coroutine Builders</h3>
+                <ul>
+                    <li><strong>launch:</strong> Starts a coroutine that doesn't return a result. Fire-and-forget style.</li>
+                    <li><strong>async:</strong> Starts a coroutine that returns a Deferred<T> result. Use await() to get the result.</li>
+                    <li><strong>runBlocking:</strong> Blocks the current thread until the coroutine completes. Used in main() and tests.</li>
+                </ul>
+                
+                <h3>Flow Types</h3>
+                <ul>
+                    <li><strong>Cold Flow:</strong> Starts a new execution for each collector. Data is produced on-demand.</li>
+                    <li><strong>SharedFlow:</strong> Hot flow that broadcasts values to multiple collectors. Can configure replay buffer.</li>
+                    <li><strong>StateFlow:</strong> Special SharedFlow that always holds one value. Skips consecutive duplicate values.</li>
+                </ul>
+                
+                <h3>Communication</h3>
+                <ul>
+                    <li><strong>Channel:</strong> Hot stream for communication between coroutines. Similar to a queue.</li>
+                </ul>
+                
+                <h3>Context Switching</h3>
+                <ul>
+                    <li><strong>withContext:</strong> Switches the coroutine's context/dispatcher while preserving the coroutine.</li>
+                </ul>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('infoModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Add click handlers to cards for individual animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.coroutine-card');
+            const animationMap = {
+                'launch { }': animateLaunch,
+                'async { }': animateAsync,
+                'Cold Flow': animateColdFlow,
+                'SharedFlow': animateSharedFlow,
+                'StateFlow': animateStateFlow,
+                'Channel': animateChannel,
+                'withContext': animateContext,
+                'runBlocking': animateBlocking
+            };
+            
+            cards.forEach(card => {
+                const title = card.querySelector('.card-title').textContent;
+                card.style.cursor = 'pointer';
+                card.addEventListener('click', (e) => {
+                    if (!e.target.closest('.code-snippet')) {
+                        const animationFn = animationMap[title];
+                        if (animationFn) animationFn();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
