@@ -556,6 +556,15 @@
                         Each collector triggers a <strong>new, independent</strong> flow execution from the beginning.
                         Think of it like a YouTube video - each viewer starts from the beginning.
                     </p>
+                    <div class="explanation-box" style="background: #e8f4fd; border-color: #3498db;">
+                        <strong>📱 Real-World Use Case:</strong> Perfect for operations that should run fresh for each observer:
+                        <ul style="margin: 5px 0 0 20px; font-size: 0.9em;">
+                            <li>Database queries - each UI component gets fresh data</li>
+                            <li>Network requests - each subscriber triggers its own API call</li>
+                            <li>File reading operations - each collector reads from start</li>
+                            <li>User-specific calculations - personalized for each observer</li>
+                        </ul>
+                    </div>
                     <div class="code-snippet">
                         <span class="code-keyword">val</span> coldFlow = <span class="code-function">flow</span> {
                             <span class="code-comment">// This block runs for EACH collector</span>
@@ -595,6 +604,15 @@
                         Broadcasts values to <strong>all active collectors</strong>. New collectors can get recent values from replay buffer.
                         Like a live TV broadcast - you join wherever it currently is.
                     </p>
+                    <div class="explanation-box" style="background: #e8f8f0; border-color: #2ecc71;">
+                        <strong>📡 Real-World Use Case:</strong> Ideal for broadcasting events to multiple subscribers:
+                        <ul style="margin: 5px 0 0 20px; font-size: 0.9em;">
+                            <li>Event bus - app-wide events (user login, logout, etc.)</li>
+                            <li>Live data streams - stock prices, sensor readings</li>
+                            <li>Chat messages - broadcast to all connected users</li>
+                            <li>Progress updates - file upload/download progress to multiple UI components</li>
+                        </ul>
+                    </div>
                     <div class="code-snippet">
                         <span class="code-keyword">val</span> sharedFlow = <span class="code-function">MutableSharedFlow</span>&lt;Int&gt;(
                             replay = <span class="code-string">2</span> <span class="code-comment">// Keep last 2 values</span>
@@ -646,6 +664,15 @@
                         Always holds <strong>one current value</strong>. New collectors immediately get the current state.
                         Automatically skips consecutive duplicate values. Perfect for UI state.
                     </p>
+                    <div class="explanation-box" style="background: #fef5e7; border-color: #f39c12;">
+                        <strong>🔄 Real-World Use Case:</strong> Best for representing current state that multiple components need:
+                        <ul style="margin: 5px 0 0 20px; font-size: 0.9em;">
+                            <li>UI state - current screen, theme mode, user preferences</li>
+                            <li>User authentication state - logged in/out status</li>
+                            <li>App configuration - settings that components need to read</li>
+                            <li>Selected items - current selection in lists or navigation</li>
+                        </ul>
+                    </div>
                     <div class="code-snippet">
                         <span class="code-keyword">val</span> stateFlow = <span class="code-function">MutableStateFlow</span>(<span class="code-string">0</span>)
                         
@@ -689,6 +716,15 @@
                         Hot stream for <strong>coroutine communication</strong>. Each value is consumed by only one receiver.
                         Like a queue where items are removed when received.
                     </p>
+                    <div class="explanation-box" style="background: #fdeaea; border-color: #e74c3c;">
+                        <strong>📬 Real-World Use Case:</strong> Perfect for producer-consumer patterns:
+                        <ul style="margin: 5px 0 0 20px; font-size: 0.9em;">
+                            <li>Task queues - processing background jobs one at a time</li>
+                            <li>Actor model - sending messages to actors for processing</li>
+                            <li>Rate limiting - controlling flow of requests or events</li>
+                            <li>Load balancing - distributing work among multiple workers</li>
+                        </ul>
+                    </div>
                     <div class="code-snippet">
                         <span class="code-keyword">val</span> channel = <span class="code-function">Channel</span>&lt;Int&gt;()
                         
@@ -750,6 +786,15 @@
                         Switches the coroutine to a different <strong>dispatcher/thread</strong> and returns result.
                         Essential for performing UI updates on Main thread or IO operations on IO thread.
                     </p>
+                    <div class="explanation-box" style="background: #f4ecf7; border-color: #9b59b6;">
+                        <strong>🔄 Real-World Use Case:</strong> Essential for thread management in real apps:
+                        <ul style="margin: 5px 0 0 20px; font-size: 0.9em;">
+                            <li>Network calls on IO thread, then update UI on Main thread</li>
+                            <li>Heavy computations on Default thread, preserve UI responsiveness</li>
+                            <li>File operations on IO, then process results on CPU threads</li>
+                            <li>Database queries on IO, then update UI components safely</li>
+                        </ul>
+                    </div>
                     <div class="code-snippet">
                         <span class="code-keyword">suspend fun</span> <span class="code-function">loadData</span>() = <span class="code-keyword">coroutineScope</span> {
                             <span class="code-comment">// Start on Main thread</span>
@@ -803,6 +848,15 @@
                         Fire-and-forget coroutine. Starts a new coroutine and <strong>doesn't return a result</strong>.
                         Returns a Job that can be used to cancel the coroutine.
                     </p>
+                    <div class="explanation-box" style="background: #fdf6fd; border-color: #f093fb;">
+                        <strong>🚀 Real-World Use Case:</strong> Perfect for independent background tasks:
+                        <ul style="margin: 5px 0 0 20px; font-size: 0.9em;">
+                            <li>Logging events - fire-and-forget logging operations</li>
+                            <li>Analytics tracking - send events without waiting for response</li>
+                            <li>Cache warming - preload data in background</li>
+                            <li>Background sync - periodic data synchronization</li>
+                        </ul>
+                    </div>
                     <div class="code-snippet">
                         <span class="code-keyword">val</span> job = <span class="code-keyword">launch</span> {
                             <span class="code-comment">// This runs asynchronously</span>
@@ -845,6 +899,15 @@
                         Creates a coroutine that <strong>returns a result</strong>. Returns Deferred&lt;T&gt; immediately.
                         Use await() to get the actual result when needed.
                     </p>
+                    <div class="explanation-box" style="background: #f0f8ff; border-color: #4facfe;">
+                        <strong>⚡ Real-World Use Case:</strong> Ideal when you need the result of async work:
+                        <ul style="margin: 5px 0 0 20px; font-size: 0.9em;">
+                            <li>Parallel API calls - fetch multiple data sources simultaneously</li>
+                            <li>Concurrent computations - process multiple calculations at once</li>
+                            <li>Parallel file processing - read/parse multiple files concurrently</li>
+                            <li>Combined operations - wait for multiple async tasks to complete</li>
+                        </ul>
+                    </div>
                     <div class="code-snippet">
                         <span class="code-keyword">val</span> deferred = <span class="code-keyword">async</span> {
                             <span class="code-comment">// This runs asynchronously</span>
@@ -895,6 +958,18 @@
                         <strong>Blocks the current thread</strong> until the coroutine completes.
                         Used in main() functions and tests. Avoid in production code!
                     </p>
+                    <div class="explanation-box" style="background: #ecf0f1; border-color: #34495e;">
+                        <strong>⚠️ Real-World Use Case:</strong> Limited use cases - be careful!:
+                        <ul style="margin: 5px 0 0 20px; font-size: 0.9em;">
+                            <li>Main function - bridging between blocking and suspending worlds</li>
+                            <li>Unit tests - testing suspend functions in blocking test frameworks</li>
+                            <li>Integration tests - waiting for async operations to complete</li>
+                            <li>Script/utility functions - simple command-line tools</li>
+                        </ul>
+                        <div style="margin-top: 8px; color: #e74c3c; font-weight: 500;">
+                            ❌ Avoid in Android UI code - blocks the Main thread!
+                        </div>
+                    </div>
                     <div class="code-snippet">
                         <span class="code-keyword">fun</span> <span class="code-function">main</span>() = <span class="code-keyword">runBlocking</span> {
                             <span class="code-comment">// This blocks the main thread</span>
@@ -1047,6 +1122,7 @@
                 updateStatus('cold-flow-status', 'completed');
                 addLog('<strong>[Cold Flow]</strong> Animation completed', 'cold-flow');
                 addLog('Key takeaway: Each collector triggered its own flow execution', 'cold-flow');
+                addLog('💡 Example: getUserPosts().collect { } - each screen gets fresh data', 'cold-flow');
             }, 8000);
         }
 
@@ -1156,6 +1232,7 @@
                 updateStatus('shared-flow-status', 'completed');
                 addLog('<strong>[SharedFlow]</strong> Animation completed', 'shared-flow');
                 addLog('Key takeaway: SharedFlow broadcasts to all active collectors', 'shared-flow');
+                addLog('💡 Example: userLoginEvents.emit(user) - all screens get notified', 'shared-flow');
             }, 9000);
         }
 
@@ -1218,6 +1295,7 @@
                 updateStatus('state-flow-status', 'completed');
                 addLog('<strong>[StateFlow]</strong> Animation completed', 'state-flow');
                 addLog('Key takeaway: StateFlow always has a value and skips consecutive duplicates', 'state-flow');
+                addLog('💡 Example: themeState.value = DarkMode - all UI components update', 'state-flow');
             }, 6000);
         }
 
@@ -1287,6 +1365,7 @@
                 updateStatus('channel-status', 'completed');
                 addLog('<strong>[Channel]</strong> Animation completed', 'channel');
                 addLog('Key takeaway: Each value is consumed by only one receiver', 'channel');
+                addLog('💡 Example: taskQueue.send(downloadTask) - workers process one task each', 'channel');
             }, 7000);
         }
 
