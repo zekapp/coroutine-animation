@@ -44,9 +44,9 @@ This visualizer helps you understand:
 
 ## 🌐 Live Demo
 
-**Option 1: GitHub Pages**
+**Option 1: NETLIFYs**
 ```
-https://zekapp.github.io/coroutine-animation/
+https://coroutine-playground.netlify.app/
 ```
 
 **Option 2: Local Setup**
