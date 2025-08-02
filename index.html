@@ -810,7 +810,12 @@
                         Like a queue where items are removed when received.
                     </p>
                     <div class="explanation-box" style="background: #fdeaea; border-color: #e74c3c;">
-                        <strong>📬 Real-World Use Case:</strong> Perfect for producer-consumer patterns:
+                        <strong>📬 CHANNEL = Queue-like Communication</strong>
+                        <div style="margin: 8px 0; padding: 8px; background: #fff5f5; border-radius: 4px; font-size: 0.9em;">
+                            <strong>🔄 Channel Types:</strong><br>
+                            • <strong>Rendezvous (capacity = 0):</strong> Direct handoff, sender waits for receiver<br>
+                            • <strong>Buffered (capacity > 0):</strong> Queue with buffer space
+                        </div>
                         <ul style="margin: 5px 0 0 20px; font-size: 0.9em;">
                             <li>Task queues - processing background jobs one at a time</li>
                             <li>Actor model - sending messages to actors for processing</li>
@@ -819,29 +824,42 @@
                         </ul>
                     </div>
                     <div class="code-snippet">
-                        <span class="code-keyword">val</span> channel = <span class="code-function">Channel</span>&lt;Int&gt;()
+                        <span class="code-comment">// Rendezvous Channel (default) - Direct handoff</span>
+                        <span class="code-keyword">val</span> rendezvous = <span class="code-function">Channel</span>&lt;Int&gt;()
+                        <span class="code-comment">// Sender waits until receiver is ready</span>
                         
-                        <span class="code-comment">// Producer coroutine</span>
-                        <span class="code-keyword">launch</span> {
-                            <span class="code-keyword">repeat</span>(<span class="code-string">5</span>) {
-                                channel.<span class="code-function">send</span>(it)
-                                <span class="code-function">println</span>(<span class="code-string">"Sent: $it"</span>)
-                            }
-                        }
+                        <span class="code-comment">// Buffered Channel - Has queue space</span>
+                        <span class="code-keyword">val</span> buffered = <span class="code-function">Channel</span>&lt;Int&gt;(capacity = <span class="code-string">3</span>)
+                        <span class="code-comment">// Sender doesn't wait if buffer has space</span>
                         
-                        <span class="code-comment">// Consumer coroutine</span>
-                        <span class="code-keyword">launch</span> {
-                            <span class="code-keyword">for</span> (value <span class="code-keyword">in</span> channel) {
-                                <span class="code-function">println</span>(<span class="code-string">"Received: $value"</span>)
-                            }
+                        <span class="code-comment">// Producer-Consumer pattern</span>
+                        <span class="code-keyword">launch</span> { channel.<span class="code-function">send</span>(value) }
+                        <span class="code-keyword">launch</span> { 
+                            <span class="code-keyword">val</span> received = channel.<span class="code-function">receive</span>()
                         }
                     </div>
                     <div class="visualization-area">
-                        <div class="visualization-header">Channel Queue</div>
+                        <div class="visualization-header">Channel Types Demonstration</div>
                         <div class="visualization-content" id="channel-viz">
                             <div class="explanation-box">
-                                📬 Values are sent to the channel and consumed by receivers
+                                📬 Watch the difference between Rendezvous and Buffered channels
                             </div>
+                            
+                            <!-- Channel Mode Selector -->
+                            <div style="text-align: center; margin: 15px 0;">
+                                <button class="btn btn-secondary" onclick="switchChannelMode('rendezvous')" id="rendezvous-btn">
+                                    🤝 Rendezvous Channel
+                                </button>
+                                <button class="btn btn-secondary" onclick="switchChannelMode('buffered')" id="buffered-btn">
+                                    📦 Buffered Channel
+                                </button>
+                            </div>
+                            
+                            <!-- Current Mode Display -->
+                            <div id="channel-mode-display" style="text-align: center; margin: 10px 0; font-weight: bold; color: #666;">
+                                Mode: Rendezvous (capacity = 0)
+                            </div>
+                            
                             <div style="display: flex; align-items: center; justify-content: space-between; margin: 20px 0;">
                                 <div>
                                     <strong>Producer</strong>
@@ -850,9 +868,12 @@
                                     </div>
                                 </div>
                                 <div style="flex: 1; margin: 0 20px;">
-                                    <strong>Channel Queue:</strong>
+                                    <strong>Channel:</strong>
                                     <div class="channel-queue" id="channel-queue">
-                                        <!-- Queue items -->
+                                        <!-- Queue items or rendezvous indicator -->
+                                    </div>
+                                    <div id="rendezvous-indicator" style="text-align: center; margin-top: 10px; font-size: 0.9em; color: #e74c3c;">
+                                        <!-- Rendezvous status -->
                                     </div>
                                 </div>
                                 <div>
@@ -1408,48 +1429,173 @@
             }, 6000);
         }
 
+        // Channel state
+        let channelMode = 'rendezvous'; // 'rendezvous' or 'buffered'
+        
+        function switchChannelMode(mode) {
+            channelMode = mode;
+            const rendezvousBtn = document.getElementById('rendezvous-btn');
+            const bufferedBtn = document.getElementById('buffered-btn');
+            const modeDisplay = document.getElementById('channel-mode-display');
+            
+            // Update button styles
+            rendezvousBtn.className = mode === 'rendezvous' ? 'btn btn-primary' : 'btn btn-secondary';
+            bufferedBtn.className = mode === 'buffered' ? 'btn btn-primary' : 'btn btn-secondary';
+            
+            // Update mode display
+            if (mode === 'rendezvous') {
+                modeDisplay.textContent = 'Mode: Rendezvous (capacity = 0) - Direct handoff';
+                modeDisplay.style.color = '#e74c3c';
+            } else {
+                modeDisplay.textContent = 'Mode: Buffered (capacity = 3) - Queue with buffer';
+                modeDisplay.style.color = '#2ecc71';
+            }
+            
+            addLog(`🔄 Switched to ${mode === 'rendezvous' ? 'Rendezvous' : 'Buffered'} channel mode`, 'channel');
+        }
+
         // Channel Animation
         function animateChannel() {
             const queueEl = document.getElementById('channel-queue');
             const producerEl = document.getElementById('channel-producer');
             const consumerEl = document.getElementById('channel-consumer');
+            const rendezvousIndicator = document.getElementById('rendezvous-indicator');
+            
             queueEl.innerHTML = '';
             producerEl.innerHTML = '';
             consumerEl.innerHTML = '';
+            rendezvousIndicator.innerHTML = '';
             
             updateStatus('channel-status', 'running');
             addLog('<strong>[Channel]</strong> Starting Channel animation', 'channel');
-            addLog('📬 QUEUE-LIKE: Each value consumed by ONLY ONE receiver', 'channel');
-            addLog('Channel created (unbuffered by default)', 'channel');
+            
+            if (channelMode === 'rendezvous') {
+                addLog('🤝 RENDEZVOUS CHANNEL: Direct handoff, sender waits for receiver', 'channel');
+                addLog('📬 Capacity = 0: No buffering, synchronous communication', 'channel');
+                animateRendezvousChannel();
+            } else {
+                addLog('📦 BUFFERED CHANNEL: Queue with buffer space', 'channel');
+                addLog('📬 Capacity = 3: Sender can send without waiting if buffer has space', 'channel');
+                animateBufferedChannel();
+            }
+            
             addLog('🔄 vs Flow: Channel = queue (consume once), Flow = broadcast (all get)', 'channel');
+        }
+        
+        function animateRendezvousChannel() {
+            const queueEl = document.getElementById('channel-queue');
+            const producerEl = document.getElementById('channel-producer');
+            const consumerEl = document.getElementById('channel-consumer');
+            const rendezvousIndicator = document.getElementById('rendezvous-indicator');
+            
+            // Show "No Queue" indicator for rendezvous
+            queueEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #666; font-style: italic;">No Buffer (Direct Handoff)</div>';
+            
+            let valueIndex = 1;
+            
+            function sendReceiveStep() {
+                if (valueIndex > 5) {
+                    setTimeout(() => {
+                        updateStatus('channel-status', 'completed');
+                        addLog('<strong>[Channel]</strong> Rendezvous animation completed', 'channel');
+                        addLog('⭐ KEY INSIGHT: Rendezvous = Synchronous handoff, perfect for coordination', 'channel');
+                    }, 1000);
+                    return;
+                }
+                
+                // Producer wants to send
+                addLog(`Producer: Trying to send(${valueIndex})...`, 'channel');
+                rendezvousIndicator.innerHTML = `🤝 Waiting for handoff of value ${valueIndex}`;
+                
+                const sendEl = document.createElement('div');
+                sendEl.className = 'coroutine-visual';
+                sendEl.style.background = 'linear-gradient(135deg, #f39c12 0%, #e67e22 100%)';
+                sendEl.textContent = `Waiting to Send(${valueIndex})`;
+                producerEl.appendChild(sendEl);
+                
+                // Producer waits...
+                setTimeout(() => {
+                    addLog(`🔄 Producer SUSPENDED: Waiting for receiver...`, 'channel');
+                    sendEl.style.opacity = '0.6';
+                    sendEl.textContent = `⏳ Suspended Send(${valueIndex})`;
+                    
+                    // Consumer becomes ready
+                    setTimeout(() => {
+                        addLog(`Consumer: Ready to receive!`, 'channel');
+                        
+                        const receiveEl = document.createElement('div');
+                        receiveEl.className = 'coroutine-visual';
+                        receiveEl.style.background = 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)';
+                        receiveEl.textContent = `Ready to Receive`;
+                        consumerEl.appendChild(receiveEl);
+                        
+                        // Direct handoff happens
+                        setTimeout(() => {
+                            addLog(`✅ DIRECT HANDOFF: ${valueIndex} transferred instantly!`, 'channel');
+                            rendezvousIndicator.innerHTML = `⚡ Direct transfer of ${valueIndex} completed`;
+                            
+                            sendEl.style.background = 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)';
+                            sendEl.textContent = `✅ Sent(${valueIndex})`;
+                            receiveEl.textContent = `✅ Received(${valueIndex})`;
+                            
+                            setTimeout(() => {
+                                sendEl.style.opacity = '0.3';
+                                receiveEl.style.opacity = '0.3';
+                                rendezvousIndicator.innerHTML = '';
+                                valueIndex++;
+                                setTimeout(sendReceiveStep, 500);
+                            }, 1000);
+                        }, 800);
+                    }, 1500);
+                }, 1000);
+            }
+            
+            sendReceiveStep();
+        }
+        
+        function animateBufferedChannel() {
+            const queueEl = document.getElementById('channel-queue');
+            const producerEl = document.getElementById('channel-producer');
+            const consumerEl = document.getElementById('channel-consumer');
+            const rendezvousIndicator = document.getElementById('rendezvous-indicator');
             
             let queueItems = [];
+            const maxCapacity = 3;
             
             // Producer
-            addLog('Producer coroutine starts sending...', 'channel');
+            addLog('Producer starts sending to buffered channel...', 'channel');
             [1, 2, 3, 4, 5].forEach((value, index) => {
                 setTimeout(() => {
-                    addLog(`Producer: channel.send(${value})`, 'channel');
-                    
-                    const sendEl = document.createElement('div');
-                    sendEl.className = 'coroutine-visual';
-                    sendEl.style.background = 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)';
-                    sendEl.textContent = `Send(${value})`;
-                    producerEl.appendChild(sendEl);
-                    
-                    // Add to queue
-                    const queueItem = document.createElement('div');
-                    queueItem.className = 'queue-item';
-                    queueItem.textContent = value;
-                    queueItem.id = `queue-item-${value}`;
-                    queueEl.appendChild(queueItem);
-                    queueItems.push(value);
+                    if (queueItems.length < maxCapacity) {
+                        addLog(`Producer: channel.send(${value}) ✅ Added to buffer`, 'channel');
+                        queueItems.push(value);
+                        
+                        const sendEl = document.createElement('div');
+                        sendEl.className = 'coroutine-visual';
+                        sendEl.style.background = 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)';
+                        sendEl.textContent = `Send(${value})`;
+                        producerEl.appendChild(sendEl);
+                        
+                        // Add to queue
+                        const queueItem = document.createElement('div');
+                        queueItem.className = 'queue-item';
+                        queueItem.textContent = value;
+                        queueItem.id = `queue-item-${value}`;
+                        queueEl.appendChild(queueItem);
+                        
+                        rendezvousIndicator.innerHTML = `Buffer: ${queueItems.length}/${maxCapacity}`;
+                        
+                        setTimeout(() => sendEl.style.opacity = '0.3', 1000);
+                    } else {
+                        addLog(`Producer: channel.send(${value}) ⏳ SUSPENDED (buffer full)`, 'channel');
+                        rendezvousIndicator.innerHTML = `⏳ Producer waiting - buffer full (${queueItems.length}/${maxCapacity})`;
+                    }
                     
                     // Consumer receives after delay
                     setTimeout(() => {
                         if (queueItems.length > 0) {
                             const received = queueItems.shift();
-                            addLog(`Consumer: channel.receive() -> ${received} ✅ CONSUMED (removed from queue)`, 'channel');
+                            addLog(`Consumer: channel.receive() -> ${received} ✅ CONSUMED (removed from buffer)`, 'channel');
                             
                             const receiveEl = document.createElement('div');
                             receiveEl.className = 'coroutine-visual';
@@ -1463,19 +1609,18 @@
                                 itemEl.style.transform = 'scale(0)';
                                 setTimeout(() => itemEl.remove(), 300);
                             }
+                            
+                            rendezvousIndicator.innerHTML = `Buffer: ${queueItems.length}/${maxCapacity}`;
+                            setTimeout(() => receiveEl.style.opacity = '0.3', 1000);
                         }
-                    }, 800);
-                    
-                    setTimeout(() => {
-                        sendEl.style.opacity = '0.3';
-                    }, 2000);
+                    }, 800 + (index * 200));
                 }, index * 1200);
             });
             
             setTimeout(() => {
                 updateStatus('channel-status', 'completed');
-                addLog('<strong>[Channel]</strong> Animation completed', 'channel');
-                addLog('Key takeaway: Each value is consumed by only one receiver', 'channel');
+                addLog('<strong>[Channel]</strong> Buffered animation completed', 'channel');
+                addLog('⭐ KEY INSIGHT: Buffered = Asynchronous with queue, good for decoupling', 'channel');
                 addLog('💡 Example: taskQueue.send(downloadTask) - workers process one task each', 'channel');
             }, 7000);
         }
