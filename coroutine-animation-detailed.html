@@ -1100,8 +1100,9 @@
                         }
                     });
                     
-                    // Show emission to active collectors
-                    const tracks = document.querySelectorAll('.collector-row.active .emission-track');
+                    // Show emission to active collectors (only in SharedFlow container)
+                    const sharedContainer = document.getElementById('shared-flow-collectors');
+                    const tracks = sharedContainer.querySelectorAll('.collector-row.active .emission-track');
                     tracks.forEach(track => {
                         const emission = document.createElement('div');
                         emission.className = 'emission emission-shared';
